@@ -25,7 +25,7 @@
 		</div>
 	{/if}
 
-	<form method="POST" use:enhance class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6">
+	<form method="POST" action="?/save" use:enhance class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6">
 		<section class="space-y-4">
 			<h2 class="font-semibold text-slate-900">Identitas usaha</h2>
 			<div class="grid gap-4 sm:grid-cols-2">

@@ -29,6 +29,11 @@
 			<p class="mt-1 text-amber-800">Periksa dan simpan profil ini terlebih dahulu agar informasi yang dibagikan lebih akurat.</p>
 			<a href={resolve(`/profile/${p.id}/edit`)} class="mt-3 inline-flex rounded-xl bg-amber-600 px-4 py-2 font-medium text-white">Periksa & lengkapi profil</a>
 		</div>
+	{:else}
+		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+			<p class="font-semibold">Profil sudah ditinjau</p>
+			<p class="mt-1 text-emerald-800">Informasi usaha sudah siap digunakan untuk rekomendasi mitra dan berbagi profil publik.</p>
+		</div>
 	{/if}
 
 	{#if lifecycle.extractionFailed}
