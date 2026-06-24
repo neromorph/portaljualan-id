@@ -6,9 +6,11 @@ function levelFor(score: number): ReadinessLevel {
 	return 'awal';
 }
 
-function hasText(value?: string | number): boolean {
-	const str = typeof value === 'number' ? String(value) : value?.trim();
-	return Boolean(str);
+function hasText(value?: unknown): boolean {
+	if (value == null) return false;
+	if (typeof value === 'string') return Boolean(value.trim());
+	if (typeof value === 'number') return true;
+	return Boolean(String(value).trim());
 }
 
 function hasList<T>(value?: T[]): boolean {
