@@ -1,6 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { generateEmbedding, buildProfileEmbeddingText, buildPartnerEmbeddingText } from '$lib/server/openrouter-embeddings';
+import { generateIntroMessage } from '$lib/server/gemini';
 import { createClient } from '@supabase/supabase-js';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
@@ -54,13 +55,39 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				...partner,
 				ruleScore: Math.round(ruleScore * 100),
 				vectorScore: Math.round(vectorScore * 100),
-				finalScore: Math.round(finalScore * 100)
+				finalScore: Math.round(finalScore * 100),
+				introMessage: null
 			};
 		})
 	);
 
 	// Sort by final score descending
 	scoredPartners.sort((a, b) => b.finalScore - a.finalScore);
+
+	// Generate intro messages for top 3 partners only (Gemini API call per partner)
+	const top3 = scoredPartners.slice(0, 3);
+	const profileInput = {
+		businessName: profile.business_name,
+		businessType: profile.business_type,
+		location: profile.location,
+		productsOrServices: profile.products_or_services,
+		businessNeeds: profile.business_needs,
+		growthTarget: profile.growth_target
+	};
+
+	await Promise.all(
+		top3.map(async (partner) => {
+			try {
+				partner.introMessage = await generateIntroMessage(
+					profileInput,
+					partner.name,
+					partner.partner_type
+				);
+			} catch {
+				partner.introMessage = null;
+			}
+		})
+	);
 
 	return {
 		profile,

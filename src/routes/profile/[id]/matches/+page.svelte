@@ -4,6 +4,8 @@
 	let { data }: { data: PageData } = $props();
 	const { profile, partners } = $derived(data);
 
+	let expandedId = $state<string | null>(null);
+
 	const partnerTypeLabels: Record<string, string> = {
 		distributor: 'Distributor',
 		packaging_supplier: 'Supplier Kemasan',
@@ -104,14 +106,31 @@
 					</p>
 
 					<!-- CTA -->
-					<a
-						href={partner.contact_url}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-					>
-						{partner.contact_label} →
-					</a>
+					<div class="flex flex-col gap-2">
+						{#if partner.introMessage && expandedId !== partner.id}
+							<button
+								onclick={() => (expandedId = expandedId === partner.id ? null : partner.id)}
+								class="text-sm text-left font-medium text-primary hover:underline"
+							>
+								📝 Lihat Pesan Perkenalan
+							</button>
+						{/if}
+
+						{#if expandedId === partner.id && partner.introMessage}
+							<div class="rounded-lg bg-muted p-3 text-sm italic text-muted-foreground leading-relaxed">
+								"{partner.introMessage}"
+							</div>
+						{/if}
+
+						<a
+							href={partner.contact_url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+						>
+							{partner.contact_label} →
+						</a>
+					</div>
 				</div>
 			{/each}
 		</div>
