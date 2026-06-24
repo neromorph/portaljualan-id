@@ -21,3 +21,14 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Graphify
+graphify-out/
+graphify-obsidian/
+
+# Cache
+.turbo/
+.cache/
+
+# Coverage
+coverage/
