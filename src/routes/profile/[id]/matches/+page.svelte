@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -36,7 +37,7 @@
 <div class="max-w-2xl mx-auto px-4 py-6">
 	<!-- Header -->
 	<div class="mb-6">
-		<a href="/profile/{profile.id}" class="text-sm text-muted-foreground hover:text-foreground mb-2 inline-flex items-center gap-1">
+		<a href={resolve(`/profile/${profile.id}`)} class="text-sm text-muted-foreground hover:text-foreground mb-2 inline-flex items-center gap-1">
 			← Kembali ke Profil
 		</a>
 		<h1 class="text-2xl font-bold">Mitra Potensial</h1>
@@ -45,10 +46,17 @@
 		</p>
 	</div>
 
+	{#if profile.status !== 'reviewed'}
+		<div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+			<p>Profil masih draft, rekomendasi bisa kurang akurat sampai profil ditinjau.</p>
+			<a class="mt-2 inline-block font-medium underline" href={resolve(`/profile/${profile.id}/edit`)}>Periksa profil</a>
+		</div>
+	{/if}
+
 	{#if partners.length === 0}
 		<div class="text-center py-12 text-muted-foreground">
 			<p>Belum ada mitra yang cocok. Coba isi profil lebih lengkap dulu.</p>
-			<a href="/profile/{profile.id}" class="mt-4 inline-block text-primary hover:underline">
+			<a href={resolve(`/profile/${profile.id}`)} class="mt-4 inline-block text-primary hover:underline">
 				Edit Profil
 			</a>
 		</div>

@@ -18,6 +18,13 @@
 		<p class="text-sm text-slate-600">Periksa dan simpan profil ini agar informasi usaha siap digunakan dan bisa dibagikan.</p>
 	</header>
 
+	{#if p.extraction_status === 'failed'}
+		<div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+			<p class="font-semibold">Ekstraksi profil belum berhasil</p>
+			<p class="mt-1">Lengkapi profil secara manual, lalu simpan untuk menandai profil sudah ditinjau.</p>
+		</div>
+	{/if}
+
 	<form method="POST" use:enhance class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6">
 		<section class="space-y-4">
 			<h2 class="font-semibold text-slate-900">Identitas usaha</h2>

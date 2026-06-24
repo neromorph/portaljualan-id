@@ -1,5 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { scoreReadiness } from '$lib/server/readiness-scoring';
 import { uploadEvidence, deleteEvidence, getPublicUrl } from '$lib/server/storage';
 import { createClient } from '@supabase/supabase-js';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
@@ -41,6 +42,14 @@ export const actions: Actions = {
 		const { user } = await locals.safeGetSession();
 		if (!user) throw redirect(303, '/auth/login');
 
+		const { data: ownedProfile } = await locals.supabase
+			.from('business_profiles')
+			.select('id')
+			.eq('id', params.id)
+			.eq('user_id', user.id)
+			.single();
+		if (!ownedProfile) throw error(404, 'Profil tidak ditemukan');
+
 		const formData = await request.formData();
 		const file = formData.get('file') as File | null;
 
@@ -57,6 +66,36 @@ export const actions: Actions = {
 				caption: formData.get('caption')?.toString() ?? ''
 			});
 
+			const { data: profile } = await locals.supabase
+				.from('business_profiles')
+				.select('*')
+				.eq('id', params.id)
+				.eq('user_id', user.id)
+				.single();
+			if (profile) {
+				const readinessResult = scoreReadiness({
+					businessName: profile.business_name ?? undefined,
+					businessType: profile.business_type ?? undefined,
+					location: profile.location ?? undefined,
+					startedYear: profile.started_year ?? undefined,
+					productsOrServices: profile.products_or_services ?? undefined,
+					monthlyRevenueEstimate: profile.monthly_revenue_estimate ?? undefined,
+					employeeCount: profile.employee_count ?? undefined,
+					salesChannels: profile.sales_channels ?? undefined,
+					businessNeeds: profile.business_needs ?? undefined,
+					growthTarget: profile.growth_target ?? undefined,
+					mainChallenges: profile.main_challenges ?? undefined,
+					strengths: profile.strengths ?? undefined,
+					risks: profile.risks ?? undefined,
+					evidenceSummary: profile.evidence_summary ?? 'Bukti aktivitas sudah diunggah.'
+				});
+				await locals.supabase.from('business_profiles').update({
+					readiness_score: readinessResult.score,
+					readiness_level: readinessResult.level,
+					readiness_breakdown: readinessResult.breakdown
+				}).eq('id', params.id).eq('user_id', user.id);
+			}
+
 			return { success: true };
 		} catch (e) {
 			return {
@@ -69,6 +108,14 @@ export const actions: Actions = {
 	delete: async ({ request, params, locals }) => {
 		const { user } = await locals.safeGetSession();
 		if (!user) throw redirect(303, '/auth/login');
+
+		const { data: ownedProfile } = await locals.supabase
+			.from('business_profiles')
+			.select('id')
+			.eq('id', params.id)
+			.eq('user_id', user.id)
+			.single();
+		if (!ownedProfile) throw error(404, 'Profil tidak ditemukan');
 
 		const formData = await request.formData();
 		const evidenceId = formData.get('evidenceId') as string;
@@ -99,12 +146,13 @@ export const actions: Actions = {
 			.from('business_profiles')
 			.select('public_slug, status')
 			.eq('id', params.id)
+			.eq('user_id', user.id)
 			.single();
 
 		if (makePublic && profile?.status !== 'reviewed') {
 			return {
 				success: false,
-				error: 'Periksa dan simpan profil terlebih dahulu sebelum dibagikan ke publik.'
+				error: 'Profil masih draft. Simpan hasil pemeriksaan dulu sebelum dibagikan.'
 			};
 		}
 
@@ -116,7 +164,8 @@ export const actions: Actions = {
 		await supabaseAdmin
 			.from('business_profiles')
 			.update({ is_public: makePublic, public_slug: slug ?? undefined })
-			.eq('id', params.id);
+			.eq('id', params.id)
+			.eq('user_id', user.id);
 
 		return { success: true, isPublic: makePublic, slug };
 	}

@@ -1,4 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
+import { buildProfileEmbeddingText, generateEmbedding } from '$lib/server/openrouter-embeddings';
 import { scoreReadiness } from '$lib/server/readiness-scoring';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -55,6 +56,22 @@ export const actions: Actions = {
 			evidenceSummary: undefined
 		});
 
+		const embeddingText = buildProfileEmbeddingText({
+			businessName: updatePayload.business_name ?? undefined,
+			businessType: updatePayload.business_type ?? undefined,
+			location: updatePayload.location ?? undefined,
+			businessNeeds: updatePayload.business_needs ?? undefined,
+			growthTarget: updatePayload.growth_target ?? undefined,
+			productsOrServices: updatePayload.products_or_services ?? undefined,
+			salesChannels: updatePayload.sales_channels
+		});
+		let embedding: number[] | null = null;
+		try {
+			embedding = await generateEmbedding(embeddingText);
+		} catch (e) {
+			console.error('Embedding refresh failed:', e);
+		}
+
 		await locals.supabase
 			.from('business_profiles')
 			.update({
@@ -68,7 +85,10 @@ export const actions: Actions = {
 				strengths: [],
 				risks: [],
 				evidence_summary: null,
-				extraction_json: {}
+				extraction_json: {},
+				embedding_text: embeddingText || null,
+				embedding_model: embedding ? 'openrouter/nvidia/llama-nemotron-embed-vl-1b-v2:free' : null,
+				embedding: embedding ? `[${embedding.join(',')}]` : null
 			})
 			.eq('id', params.id)
 			.eq('user_id', session.user.id);

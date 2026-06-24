@@ -35,6 +35,15 @@
 		<div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
 			<p class="font-semibold">Ekstraksi profil belum berhasil</p>
 			<p class="mt-1">{lifecycle.extractionError}</p>
+			{#if lifecycle.canRetryExtraction}
+				<form class="mt-3" method="POST" action={resolve(`/profile/${p.id}/retry-extraction`)}>
+					<button class="rounded-xl bg-red-700 px-4 py-2 font-medium text-white" type="submit">Coba ekstraksi ulang</button>
+				</form>
+			{:else if lifecycle.retryAt}
+				<p class="mt-2">Coba lagi setelah {new Date(lifecycle.retryAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}.</p>
+			{:else}
+				<p class="mt-2">Silakan lengkapi profil secara manual.</p>
+			{/if}
 		</div>
 	{/if}
 

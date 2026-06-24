@@ -1,4 +1,5 @@
 import { redirect, fail } from '@sveltejs/kit';
+import { canApplyExtraction } from '$lib/server/profile-lifecycle';
 import { extractBusinessProfile, explainReadiness, generateImprovementSuggestions } from '$lib/server/gemini';
 import { generateEmbedding, buildProfileEmbeddingText } from '$lib/server/openrouter-embeddings';
 import { scoreReadiness } from '$lib/server/readiness-scoring';
@@ -30,6 +31,8 @@ export const actions: Actions = {
 				status: 'draft',
 				extraction_status: 'pending',
 				extraction_error: null,
+				extraction_attempts: 1,
+				last_extraction_attempt_at: new Date().toISOString(),
 				extraction_json: {},
 				readiness_breakdown: {},
 				improvement_suggestions: []
@@ -56,6 +59,7 @@ export const actions: Actions = {
 					extraction_error: 'Ekstraksi profil belum berhasil. Silakan periksa dan lengkapi profil secara manual.'
 				})
 				.eq('id', profile.id);
+			throw redirect(303, `/profile/${profile.id}/edit`);
 		}
 
 		// 3. Score readiness with extracted data
@@ -108,9 +112,15 @@ export const actions: Actions = {
 			console.error('Embedding error:', e);
 		}
 
+		const { data: latestProfile } = await locals.supabase
+			.from('business_profiles')
+			.select('status')
+			.eq('id', profile.id)
+			.single();
+
 		const { error: updateError } = await locals.supabase
 			.from('business_profiles')
-			.update({
+			.update(canApplyExtraction(latestProfile) ? {
 				business_name: extracted.businessName ?? null,
 				business_type: extracted.businessType ?? null,
 				location: extracted.location ?? null,
@@ -134,6 +144,9 @@ export const actions: Actions = {
 				embedding_text: embeddingText || null,
 				embedding_model: embeddingModel || null,
 				embedding: embedding ? `[${embedding.join(',')}]` : null,
+				extraction_status: 'succeeded',
+				extraction_error: null
+			} : {
 				extraction_status: 'succeeded',
 				extraction_error: null
 			})
