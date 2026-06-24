@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -41,7 +42,7 @@
 
 <div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
 	<div>
-		<a href="/profile/{data.profile.id}" class="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-2">
+		<a href={resolve(`/profile/${data.profile.id}`)} class="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-2">
 			← Kembali ke Profil
 		</a>
 		<h1 class="text-2xl font-bold">Foto Bukti</h1>
@@ -154,11 +155,13 @@
 
 	<!-- Public sharing -->
 	<div class="border rounded-xl p-4 space-y-3">
-		<div class="flex items-center justify-between">
+		<div class="flex items-center justify-between gap-4">
 			<div>
 				<h3 class="font-semibold text-sm">Bagikan Profil</h3>
 				<p class="text-xs text-muted-foreground">
-					{#if data.profile.is_public}
+					{#if data.profile.status !== 'reviewed'}
+						Bagikan profil ke publik tersedia setelah profil ditinjau dan disimpan.
+					{:else if data.profile.is_public}
 						Profil bisa dilihat publik via link.
 					{:else}
 						Aktifkan untuk dapat link profil publik.
@@ -168,17 +171,18 @@
 			<form
 				method="POST"
 				action="?/togglePublic"
-				use:enhance={({ formData }) => {
-					const makePublic = !data.profile.is_public;
-					formData.set('makePublic', String(makePublic));
-					return async ({ update }) => { await update(); };
+				use:enhance={() => {
+					return async ({ update }) => {
+						await update();
+					};
 				}}
 			>
 				<input type="hidden" name="makePublic" value={String(!data.profile.is_public)} />
 				<button
 					type="submit"
+					disabled={data.profile.status !== 'reviewed'}
 					aria-label={data.profile.is_public ? 'Nonaktifkan profil publik' : 'Aktifkan profil publik'}
-					class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {data.profile.is_public ? 'bg-primary' : 'bg-muted'}"
+					class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {data.profile.is_public ? 'bg-primary' : 'bg-muted'} disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					<span
 						class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {data.profile.is_public ? 'translate-x-6' : 'translate-x-1'}"
@@ -188,12 +192,13 @@
 			</form>
 		</div>
 
+
 		{#if data.profile.is_public && data.profile.public_slug}
 			<div class="flex gap-2">
 				<input
 					type="text"
 					readonly
-					value="/p/{data.profile.public_slug}"
+					value={resolve(`/p/${data.profile.public_slug}`)}
 					class="flex-1 text-xs bg-muted px-3 py-2 rounded-lg"
 					id="share-url"
 				/>

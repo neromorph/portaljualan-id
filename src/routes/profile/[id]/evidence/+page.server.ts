@@ -97,9 +97,16 @@ export const actions: Actions = {
 
 		const { data: profile } = await supabaseAdmin
 			.from('business_profiles')
-			.select('public_slug')
+			.select('public_slug, status')
 			.eq('id', params.id)
 			.single();
+
+		if (makePublic && profile?.status !== 'reviewed') {
+			return {
+				success: false,
+				error: 'Periksa dan simpan profil terlebih dahulu sebelum dibagikan ke publik.'
+			};
+		}
 
 		let slug = profile?.public_slug ?? null;
 		if (makePublic && !slug) {

@@ -1,4 +1,5 @@
 import { GEMINI_API_BASE, GEMINI_API_KEY, GEMINI_MODEL } from '$env/static/private';
+import type { BusinessProfileInput } from '$lib/schemas/business-profile';
 
 const BASE_URL = GEMINI_API_BASE.endsWith('/') ? GEMINI_API_BASE.slice(0, -1) : GEMINI_API_BASE;
 const MODEL = GEMINI_MODEL || 'gemini-3.1-flash-lite';
@@ -12,23 +13,6 @@ Jangan mengarang informasi. Lebih baik null daripada salah.`;
 export interface ExtractionResult {
 	extracted: Partial<BusinessProfileInput>;
 	raw: string;
-}
-
-interface BusinessProfileInput {
-	businessName?: string;
-	businessType?: string;
-	location?: string;
-	startedYear?: number;
-	productsOrServices?: string;
-	monthlyRevenueEstimate?: string;
-	employeeCount?: number;
-	salesChannels?: string[];
-	businessNeeds?: string;
-	growthTarget?: string;
-	mainChallenges?: string;
-	strengths?: string[];
-	risks?: string[];
-	evidenceSummary?: string;
 }
 
 async function chat(prompt: string, maxTokens = 300): Promise<string> {
@@ -59,7 +43,7 @@ async function chat(prompt: string, maxTokens = 300): Promise<string> {
 	return content;
 }
 
-async function chatJson<T>(prompt: string, schema: Record<string, unknown>, maxTokens = 500): Promise<T> {
+async function chatJson<T>(prompt: string, maxTokens = 500): Promise<T> {
 	const res = await fetch(`${BASE_URL}/chat/completions`, {
 		method: 'POST',
 		headers: {
@@ -103,21 +87,13 @@ ${story}
 
 JSON dengan field: businessName, businessType, location, startedYear (angka tahun), productsOrServices, monthlyRevenueEstimate, employeeCount (angka), salesChannels (array string), businessNeeds, growthTarget, mainChallenges, strengths (array string), risks (array string), evidenceSummary.`;
 
-	const raw = await chat(prompt);
-
-	let extracted: Partial<BusinessProfileInput>;
-	try {
-		extracted = JSON.parse(raw);
-	} catch {
-		throw new Error(`Invalid JSON from Gemini: ${raw.slice(0, 200)}`);
-	}
-
-	return { extracted, raw };
+	const extracted = await chatJson<Partial<BusinessProfileInput>>(prompt);
+	return { extracted, raw: JSON.stringify(extracted) };
 }
 
 export async function explainReadiness(
 	profile: BusinessProfileInput,
-	result: { score: number; level: string; breakdown: Record<string, number> }
+	result: { score: number; level: string }
 ): Promise<string> {
 	const prompt = `Jelaskan hasil kesiapan kolaborasi berikut dalam bahasa Indonesia yang ramah untuk UMKM non-teknis.
 
@@ -170,7 +146,7 @@ Profil usaha:
 - Bukti: ${profile.evidenceSummary ?? '-'}`;
 
 	try {
-		const result = await chatJson<{ suggestions?: string[] }>(prompt, { type: 'object' });
+		const result = await chatJson<{ suggestions?: string[] }>(prompt);
 		return result.suggestions ?? [];
 	} catch {
 		return [];

@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	let { data } = $props();
 
 	const p = $derived(data.profile);
 	const r = $derived(data.readinessResult);
+	const lifecycle = $derived(data.lifecycle);
 
 	const levelLabel: Record<string, string> = {
 		awal: 'Awal',
@@ -17,9 +19,24 @@
 
 <main class="mx-auto max-w-2xl px-4 py-8 space-y-6">
 	<header class="flex items-center justify-between">
-		<a class="text-sm text-slate-600" href="/dashboard">← Dashboard</a>
+		<a class="text-sm text-slate-600" href={resolve('/dashboard')}>← Dashboard</a>
 		<span class="text-xs text-slate-400">{new Date(p.created_at).toLocaleDateString('id-ID')}</span>
 	</header>
+
+	{#if lifecycle.isDraft}
+		<div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+			<p class="font-semibold">Profil masih draft</p>
+			<p class="mt-1 text-amber-800">Periksa dan simpan profil ini terlebih dahulu agar informasi yang dibagikan lebih akurat.</p>
+			<a href={resolve(`/profile/${p.id}/edit`)} class="mt-3 inline-flex rounded-xl bg-amber-600 px-4 py-2 font-medium text-white">Periksa & lengkapi profil</a>
+		</div>
+	{/if}
+
+	{#if lifecycle.extractionFailed}
+		<div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+			<p class="font-semibold">Ekstraksi profil belum berhasil</p>
+			<p class="mt-1">{lifecycle.extractionError}</p>
+		</div>
+	{/if}
 
 	<!-- Business Profile -->
 	<section class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
@@ -59,7 +76,7 @@
 			<div class="space-y-1">
 				<span class="text-sm text-slate-500">Kanal Penjualan</span>
 				<div class="flex flex-wrap gap-2">
-					{#each p.sales_channels as channel}
+					{#each p.sales_channels as channel (channel)}
 						<span class="rounded-full bg-slate-100 px-3 py-0.5 text-xs font-medium text-slate-700">{channel}</span>
 					{/each}
 				</div>
@@ -85,7 +102,7 @@
 				{ label: 'Kejelasan Target', value: r.breakdown.targetClarity, max: 15 },
 				{ label: 'Bukti Aktivitas', value: r.breakdown.activityEvidence, max: 20 },
 				{ label: 'Kesiapan Kolaborasi', value: r.breakdown.collaborationReadiness, max: 20 }
-			] as item}
+			] as item, i (item.label)}
 				<div class="flex items-center gap-3 text-sm">
 					<span class="w-36 text-slate-600">{item.label}</span>
 					<div class="flex-1 bg-emerald-100 rounded-full h-2">
@@ -101,7 +118,7 @@
 	</section>
 
 	<!-- Strengths / Risks -->
-	{#if p.strengths?.length || p.risks?.length}
+	{#if p.business_needs || p.growth_target || p.main_challenges || p.strengths?.length || p.risks?.length || p.evidence_summary}
 		<section class="rounded-2xl border border-slate-200 bg-white p-6 space-y-3">
 			<h2 class="font-semibold text-slate-900">Profil Usaha</h2>
 
@@ -130,7 +147,7 @@
 				<div class="space-y-1">
 					<span class="text-sm text-slate-500">Kekuatan</span>
 					<ul class="space-y-1">
-						{#each p.strengths as strength}
+						{#each p.strengths as strength (strength)}
 							<li class="flex items-center gap-2 text-sm text-slate-900">
 								<span class="text-emerald-500">✓</span>{strength}
 							</li>
@@ -143,7 +160,7 @@
 				<div class="space-y-1">
 					<span class="text-sm text-slate-500">Risiko / Perhatian</span>
 					<ul class="space-y-1">
-						{#each p.risks as risk}
+						{#each p.risks as risk (risk)}
 							<li class="flex items-center gap-2 text-sm text-slate-700">
 								<span class="text-amber-500">!</span>{risk}
 							</li>
@@ -161,12 +178,18 @@
 		</section>
 	{/if}
 
+	{#if lifecycle.isReviewed}
+		<section class="flex flex-col gap-3">
+			<a href={resolve(`/profile/${p.id}/edit`)} class="w-full rounded-2xl border border-slate-300 px-5 py-3 text-center text-sm font-medium text-slate-700 hover:bg-slate-50">Periksa & lengkapi profil</a>
+		</section>
+	{/if}
+
 	<!-- Suggestions -->
 	{#if data.profile.improvement_suggestions?.length}
 		<section class="rounded-2xl border border-amber-200 bg-amber-50 p-6 space-y-2">
 			<h2 class="font-semibold text-amber-900">Saran Perbaikan</h2>
 			<ul class="space-y-2">
-				{#each data.profile.improvement_suggestions as suggestion}
+				{#each data.profile.improvement_suggestions as suggestion (suggestion)}
 					<li class="flex items-start gap-2 text-sm text-amber-800">
 						<span class="mt-0.5 shrink-0 text-amber-500">💡</span>{suggestion}
 					</li>
@@ -179,12 +202,12 @@
 	<section class="flex flex-col gap-3">
 		<a
 			class="w-full rounded-2xl bg-emerald-700 px-5 py-3 text-center font-semibold text-white shadow-sm hover:bg-emerald-800"
-			href="/profile/{p.id}/matches"
+			href={resolve(`/profile/${p.id}/matches`)}
 		>
 			Cari Mitra Cocok
 		</a>
 		<a
-			href="/profile/{p.id}/evidence"
+			href={resolve(`/profile/${p.id}/evidence`)}
 			class="w-full rounded-2xl border border-slate-300 px-5 py-3 text-center text-sm font-medium text-slate-700 hover:bg-slate-50"
 		>
 			📷 Foto Bukti & Bagikan Profil

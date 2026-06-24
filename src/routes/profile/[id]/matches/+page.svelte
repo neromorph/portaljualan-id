@@ -22,16 +22,10 @@
 		design_tool: 'Tools Desain'
 	};
 
-	const scoreColor = (score: number) => {
-		if (score >= 75) return 'text-green-600';
-		if (score >= 50) return 'text-yellow-600';
-		return 'text-red-500';
-	};
-
-	const scoreBar = (score: number) => {
-		const color =
-			score >= 75 ? 'bg-green-500' : score >= 50 ? 'bg-yellow-500' : 'bg-red-400';
-		return `${color}`;
+	const scoreTone = (score: number) => {
+		if (score >= 75) return { text: 'text-green-600', bar: 'bg-green-500' };
+		if (score >= 50) return { text: 'text-yellow-600', bar: 'bg-yellow-500' };
+		return { text: 'text-red-500', bar: 'bg-red-400' };
 	};
 </script>
 
@@ -75,7 +69,7 @@
 						</div>
 						<!-- Final score -->
 						<div class="text-right flex-shrink-0">
-							<div class="text-2xl font-bold {scoreColor(partner.finalScore)}">
+							<div class="text-2xl font-bold {scoreTone(partner.finalScore).text}">
 								{partner.finalScore}
 							</div>
 							<div class="text-xs text-muted-foreground">dari 100</div>
@@ -85,7 +79,7 @@
 					<!-- Score bar -->
 					<div class="h-2 bg-muted rounded-full overflow-hidden mb-3">
 						<div
-							class="h-full {scoreBar(partner.finalScore)} transition-all"
+							class="h-full {scoreTone(partner.finalScore).bar} transition-all"
 							style="width: {partner.finalScore}%"
 						></div>
 					</div>

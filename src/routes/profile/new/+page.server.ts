@@ -27,6 +27,9 @@ export const actions: Actions = {
 			.insert({
 				user_id: session.user.id,
 				raw_story: rawStory,
+				status: 'draft',
+				extraction_status: 'pending',
+				extraction_error: null,
 				extraction_json: {},
 				readiness_breakdown: {},
 				improvement_suggestions: []
@@ -46,7 +49,13 @@ export const actions: Actions = {
 			extracted = result.extracted ?? {};
 		} catch (e) {
 			console.error('Gemini extraction error:', e);
-			// Continue with empty extraction — user can fill manually
+			await locals.supabase
+				.from('business_profiles')
+				.update({
+					extraction_status: 'failed',
+					extraction_error: 'Ekstraksi profil belum berhasil. Silakan periksa dan lengkapi profil secara manual.'
+				})
+				.eq('id', profile.id);
 		}
 
 		// 3. Score readiness with extracted data
@@ -99,7 +108,6 @@ export const actions: Actions = {
 			console.error('Embedding error:', e);
 		}
 
-		// 6. Update profile with all extracted data
 		const { error: updateError } = await locals.supabase
 			.from('business_profiles')
 			.update({
@@ -125,9 +133,9 @@ export const actions: Actions = {
 				improvement_suggestions: suggestions,
 				embedding_text: embeddingText || null,
 				embedding_model: embeddingModel || null,
-				embedding: embedding
-					? `[${embedding.join(',')}]`
-					: null
+				embedding: embedding ? `[${embedding.join(',')}]` : null,
+				extraction_status: 'succeeded',
+				extraction_error: null
 			})
 			.eq('id', profile.id);
 
