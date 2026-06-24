@@ -183,10 +183,11 @@
 		>
 			Cari Mitra Cocok
 		</a>
-		<button
+		<a
+			href="/profile/{p.id}/evidence"
 			class="w-full rounded-2xl border border-slate-300 px-5 py-3 text-center text-sm font-medium text-slate-700 hover:bg-slate-50"
 		>
-			Bagikan Profil
-		</button>
+			📷 Foto Bukti & Bagikan Profil
+		</a>
 	</section>
 </main>
