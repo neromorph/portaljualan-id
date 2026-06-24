@@ -29,7 +29,7 @@ create table business_profiles (
   improvement_suggestions text[],
   embedding_text text,
   embedding_model text,
-  embedding vector(768),
+  embedding vector(2048),
   is_public boolean not null default false,
   public_slug text unique,
   created_at timestamptz not null default now(),
@@ -50,7 +50,7 @@ create table business_partners (
   contact_url text,
   embedding_text text not null,
   embedding_model text,
-  embedding vector(768),
+  embedding vector(2048),
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
