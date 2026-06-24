@@ -43,14 +43,4 @@
 			Buat profil awal
 		</button>
 	</form>
-
-	{#if form?.result}
-		<section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-			<h2 class="font-semibold text-emerald-950">Readiness sementara</h2>
-			<p class="text-emerald-900">
-				Skor: {form.result.score} — {form.result.level}
-			</p>
-			<pre class="mt-2 text-xs text-emerald-800">{JSON.stringify(form.result.breakdown, null, 2)}</pre>
-		</section>
-	{/if}
 </main>
