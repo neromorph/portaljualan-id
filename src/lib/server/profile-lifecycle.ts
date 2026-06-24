@@ -11,7 +11,8 @@ export function canRetryExtraction(profile: {
 	extraction_attempts?: number | null;
 	last_extraction_attempt_at?: string | Date | null;
 }, now = new Date()): boolean {
-	return retryAvailableAt(profile, now) !== null && retryAvailableAt(profile, now)! <= now;
+	const at = retryAvailableAt(profile, now);
+	return at !== null && at <= now;
 }
 
 export function retryAvailableAt(profile: {
@@ -43,7 +44,7 @@ export function profileLifecycleView(profile: {
 	retryAt: string | null;
 } {
 	const retryAt = retryAvailableAt(profile);
-	const canRetry = canRetryExtraction(profile);
+	const canRetry = retryAt !== null && retryAt <= new Date();
 	return {
 		isDraft: profile.status !== 'reviewed',
 		isReviewed: profile.status === 'reviewed',
