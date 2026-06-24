@@ -1,6 +1,7 @@
 import { redirect, error } from '@sveltejs/kit';
 import { scoreReadiness } from '$lib/server/readiness-scoring';
 import { profileLifecycleView } from '$lib/server/profile-lifecycle';
+import { getProfileUiState } from '$lib/profile-ui-state';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -39,6 +40,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		profile,
 		readinessResult,
-		lifecycle: profileLifecycleView(profile)
+		lifecycle: profileLifecycleView(profile),
+		uiState: getProfileUiState(profile)
 	};
 };

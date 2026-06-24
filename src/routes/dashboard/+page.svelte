@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
+	import StatusBadge from '$lib/components/StatusBadge.svelte';
 
-	let { data, form } = $props();
-
-	const levelLabel: Record<string, string> = {
-		awal: 'Awal',
-		berkembang: 'Berkembang',
-		siap_kolaborasi: 'Siap Kolaborasi'
-	};
+	let { data } = $props();
+	let statusFilter = $state('all');
+	const filteredProfiles = $derived(
+		statusFilter === 'all'
+			? data.profiles
+			: data.profiles.filter((p) => p.uiState.status === statusFilter)
+	);
 </script>
 
 <svelte:head>
@@ -15,13 +18,13 @@
 </svelte:head>
 
 <main class="mx-auto max-w-2xl px-4 py-8 space-y-6">
-	<header class="flex items-center justify-between">
-		<div>
-			<p class="text-sm font-medium text-emerald-700">PortalJualan ID</p>
-			<h1 class="text-2xl font-bold tracking-tight text-slate-950">Dashboard</h1>
-			<p class="text-sm text-slate-500">{data.user.email}</p>
-		</div>
-		<form method="POST" action="?/logout" use:enhance>
+	<div class="flex items-start justify-between gap-4">
+		<PageHeader
+			eyebrow="PortalJualan ID"
+			title="Dashboard"
+			description="Pantau profil usaha, lihat status kesiapan, dan lanjutkan langkah berikutnya."
+		/>
+		<form method="POST" action="?/logout" use:enhance class="shrink-0">
 			<button
 				type="submit"
 				class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
@@ -29,48 +32,76 @@
 				Keluar
 			</button>
 		</form>
-	</header>
+	</div>
 
-	<!-- New profile CTA -->
-	<a
-		class="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50 px-5 py-4 font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
-		href="/profile/new"
-	>
-		<span>+</span> Buat profil usaha baru
-	</a>
-
-	<!-- Profile list -->
-	{#if data.profiles.length > 0}
-		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-slate-700">Profil Usaha</h2>
-			{#each data.profiles as profile}
-				<a
-					href="/profile/{profile.id}"
-					class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 hover:border-emerald-300 hover:shadow-sm transition-all"
-				>
-					<div class="min-w-0">
-						<p class="font-semibold text-slate-900 truncate">
-							{profile.business_name ?? 'Usaha Baru'}
-						</p>
-						<p class="text-xs text-slate-500">
-							{profile.business_type ?? '-'} · {new Date(profile.created_at).toLocaleDateString('id-ID')}
-						</p>
-					</div>
-					<div class="flex items-center gap-2 shrink-0">
-						{#if profile.readiness_score != null}
-							<span class="text-sm font-semibold text-slate-700">{profile.readiness_score}</span>
-						{/if}
-						<span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-							{levelLabel[profile.readiness_level ?? 'awal'] ?? 'Awal'}
-						</span>
-					</div>
-				</a>
-			{/each}
-		</section>
+	{#if data.profiles.length === 0}
+		<EmptyState
+			title="Belum ada profil usaha"
+			description="Buat profil pertama untuk menyusun informasi usaha dan melihat kesiapan kolaborasi."
+			href="/profile/new"
+			actionLabel="Buat profil usaha"
+		/>
 	{:else}
-		<section class="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
-			<p class="text-sm text-slate-600">Belum ada profil usaha.</p>
-			<p class="text-xs text-slate-400 mt-1">Buat profil pertama kamu untuk melihat kesiapan kolaborasi.</p>
+		<!-- New profile CTA -->
+		<a
+			class="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50 px-5 py-4 font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+			href="/profile/new"
+		>
+			<span>+</span> Buat profil usaha baru
+		</a>
+
+		<!-- Status filter -->
+		<label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+			Filter status
+			<select
+				bind:value={statusFilter}
+				class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm sm:w-auto"
+			>
+				<option value="all">Semua</option>
+				<option value="processing">Sedang diproses</option>
+				<option value="draft">Draft</option>
+				<option value="needs_attention">Perlu perhatian</option>
+				<option value="ready">Siap ditinjau</option>
+			</select>
+		</label>
+
+		<!-- Profile cards -->
+		<section class="space-y-3">
+			{#each filteredProfiles as profile (profile.id)}
+				<article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+					<div class="flex items-start justify-between gap-4">
+						<div class="min-w-0">
+							<h2 class="truncate font-semibold text-slate-950">
+								{profile.business_name ?? 'Usaha Baru'}
+							</h2>
+							<p class="mt-1 text-sm text-slate-500">
+								{profile.business_type ?? 'Jenis usaha belum lengkap'}{profile.location ? ` · ${profile.location}` : ''}
+							</p>
+						</div>
+						<StatusBadge label={profile.uiState.label} tone={profile.uiState.tone} />
+					</div>
+
+					<div class="mt-4 flex items-center justify-between gap-4 text-sm">
+						<p class="text-slate-600">{profile.uiState.helperText}</p>
+						{#if profile.readiness_score != null}
+							<p class="shrink-0 font-semibold text-slate-950">{profile.readiness_score}/100</p>
+						{/if}
+					</div>
+
+					{#if profile.uiState.primaryActionHref}
+						<a
+							class="mt-4 inline-flex rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+							href={profile.uiState.primaryActionHref}
+						>
+							{profile.uiState.primaryActionLabel}
+						</a>
+					{/if}
+				</article>
+			{/each}
+
+			{#if filteredProfiles.length === 0}
+				<p class="text-center text-sm text-slate-500 py-4">Tidak ada profil dengan filter tersebut.</p>
+			{/if}
 		</section>
 	{/if}
 </main>
