@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 
 	let { data } = $props();
@@ -9,7 +7,7 @@
 	const filteredProfiles = $derived(
 		statusFilter === 'all'
 			? data.profiles
-			: data.profiles.filter((p) => p.uiState.status === statusFilter)
+			: data.profiles.filter((p: any) => p.uiState.status === statusFilter)
 	);
 </script>
 
@@ -19,11 +17,11 @@
 
 <main class="mx-auto max-w-2xl px-4 py-8 space-y-6">
 	<div class="flex items-start justify-between gap-4">
-		<PageHeader
-			eyebrow="PortalJualan ID"
-			title="Dashboard"
-			description="Pantau profil usaha, lihat status kesiapan, dan lanjutkan langkah berikutnya."
-		/>
+		<div class="space-y-2">
+			<p class="text-sm font-medium text-emerald-700">PortalJualan ID</p>
+			<h1 class="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Dashboard</h1>
+			<p class="text-sm leading-6 text-slate-600">Pantau profil usaha, lihat status kesiapan, dan lanjutkan langkah berikutnya.</p>
+		</div>
 		<form method="POST" action="?/logout" use:enhance class="shrink-0">
 			<button
 				type="submit"
@@ -35,14 +33,14 @@
 	</div>
 
 	{#if data.profiles.length === 0}
-		<EmptyState
-			title="Belum ada profil usaha"
-			description="Buat profil pertama untuk menyusun informasi usaha dan melihat kesiapan kolaborasi."
-			href="/profile/new"
-			actionLabel="Buat profil usaha"
-		/>
+		<section class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+			<h2 class="font-semibold text-slate-950">Belum ada profil usaha</h2>
+			<p class="mt-2 text-sm leading-6 text-slate-600">Buat profil pertama untuk menyusun informasi usaha dan melihat kesiapan kolaborasi.</p>
+			<a class="mt-4 inline-flex rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800" href="/profile/new">
+				Buat profil usaha
+			</a>
+		</section>
 	{:else}
-		<!-- New profile CTA -->
 		<a
 			class="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50 px-5 py-4 font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
 			href="/profile/new"
@@ -50,7 +48,6 @@
 			<span>+</span> Buat profil usaha baru
 		</a>
 
-		<!-- Status filter -->
 		<label class="flex items-center gap-2 text-sm font-medium text-slate-700">
 			Filter status
 			<select
@@ -65,7 +62,6 @@
 			</select>
 		</label>
 
-		<!-- Profile cards -->
 		<section class="space-y-3">
 			{#each filteredProfiles as profile (profile.id)}
 				<article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -100,7 +96,7 @@
 			{/each}
 
 			{#if filteredProfiles.length === 0}
-				<p class="text-center text-sm text-slate-500 py-4">Tidak ada profil dengan filter tersebut.</p>
+				<p class="py-4 text-center text-sm text-slate-500">Tidak ada profil dengan filter tersebut.</p>
 			{/if}
 		</section>
 	{/if}

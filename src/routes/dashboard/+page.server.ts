@@ -18,21 +18,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		uiState: getProfileUiState(profile)
 	}));
 
-	type DashboardProfile = {
-		id: string;
-		business_name: string | null;
-		business_type: string | null;
-		location: string | null;
-		readiness_score: number | null;
-		readiness_level: string | null;
-		status: string | null;
-		extraction_status: string | null;
-		improvement_suggestions: unknown[] | null;
-		is_public: boolean | null;
-		created_at: string;
-		uiState: ReturnType<typeof import('$lib/profile-ui-state').getProfileUiState>;
-	};
-	return { session, user, profiles: shapedProfiles as DashboardProfile[] };
+	return { session, user, profiles: shapedProfiles as any };
 };
 
 export const actions: Actions = {
