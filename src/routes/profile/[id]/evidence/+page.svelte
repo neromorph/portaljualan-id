@@ -177,10 +177,12 @@
 				<input type="hidden" name="makePublic" value={String(!data.profile.is_public)} />
 				<button
 					type="submit"
+					aria-label={data.profile.is_public ? 'Nonaktifkan profil publik' : 'Aktifkan profil publik'}
 					class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {data.profile.is_public ? 'bg-primary' : 'bg-muted'}"
 				>
 					<span
 						class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {data.profile.is_public ? 'translate-x-6' : 'translate-x-1'}"
+						aria-hidden="true"
 					></span>
 				</button>
 			</form>
