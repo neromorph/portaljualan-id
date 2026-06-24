@@ -25,6 +25,8 @@ vite.config.ts.timestamp-*
 # Graphify
 docs/
 .pi/
+*.md
+!README.md
 graphify-out/
 graphify-obsidian/
 
